@@ -909,22 +909,22 @@ const adminPage = `
         <table class="w-full divide-y divide-gray-200 responsive-table">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 23%;">
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 17%;">
                 名称
               </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 13%;">
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 12%;">
                 类型
               </th>
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 18%;">
                 到期时间 <i class="fas fa-sort-up ml-1 text-indigo-500" title="按到期时间升序排列"></i>
               </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 10%;">
-                金额
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 15%;">
+                注册商
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 12%;">
+                剩余天数
               </th>
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 13%;">
-                提醒设置
-              </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 10%;">
                 状态
               </th>
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 13%;">
@@ -1008,26 +1008,33 @@ const adminPage = `
           </div>
         </div>
 
-        <!-- 金额 -->
-        <div class="mb-4">
-          <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">
-            金额（元）
-            <span class="text-gray-400 text-xs ml-1">可选</span>
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-              ¥
-            </span>
+        <!-- 注册商 -->
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="registrarName" class="block text-sm font-medium text-gray-700 mb-1">
+              注册商名称
+              <span class="text-gray-400 text-xs ml-1">可选</span>
+            </label>
             <input
-              type="number"
-              id="amount"
-              step="0.01"
-              min="0"
-              placeholder="例如: 15.00"
-              class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              type="text"
+              id="registrarName"
+              placeholder="例如: Namecheap"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <p class="mt-1 text-xs text-gray-500">用于统计支出和生成仪表盘</p>
+          <div>
+            <label for="registrarUrl" class="block text-sm font-medium text-gray-700 mb-1">
+              注册商链接
+              <span class="text-gray-400 text-xs ml-1">可选</span>
+            </label>
+            <input
+              type="url"
+              id="registrarUrl"
+              placeholder="https://example.com"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+            <p class="mt-1 text-xs text-gray-500">用于快速直达续费/管理页面</p>
+          </div>
         </div>
 
         <div class="mb-4 flex items-center space-x-6">
@@ -2042,17 +2049,25 @@ const lunarBiz = {
           : '';
         const startDateHtml = startDateText ? createHoverText(startDateText, 30, 'text-xs text-gray-500 mt-1') : '';
 
-        const reminderExtra = reminder.value === 0
-          ? '<div class="text-xs text-gray-500 mt-1">仅到期时提醒</div>'
-          : (reminder.unit === 'hour' ? '<div class="text-xs text-gray-500 mt-1">小时级提醒</div>' : '');
-        const reminderHtml = '<div><i class="fas fa-bell mr-1"></i>' + reminder.displayText + '</div>' + reminderExtra;
+        const remainingHtml = '<div class="text-sm text-gray-900">' + daysLeftText + '</div>';
 
-        const amountHtml = subscription.amount
-          ? '<div class="flex items-center gap-1">' +
-              '<i class="fas fa-yen-sign text-green-500"></i>' +
-              '<span class="text-sm font-medium text-gray-900">¥' + subscription.amount.toFixed(2) + '</span>' +
-            '</div>'
-          : '<span class="text-xs text-gray-400">未设置</span>';
+        const registrarName = subscription.registrarName || '';
+        const registrarUrl = subscription.registrarUrl || '';
+        let registrarHtml = '';
+        if (registrarName || registrarUrl) {
+          const displayName = registrarName || '注册网址';
+          if (registrarUrl) {
+            registrarHtml =
+              '<a href="' + registrarUrl + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline">' +
+                '<i class="fas fa-link text-xs"></i>' +
+                displayName +
+              '</a>';
+          } else {
+            registrarHtml = '<span class="text-sm font-medium text-gray-900">' + displayName + '</span>';
+          }
+        } else {
+          registrarHtml = '<span class="text-xs text-gray-400">未设置</span>';
+        }
 
         row.innerHTML =
           '<td data-label="名称" class="px-4 py-3"><div class="td-content-wrapper">' +
@@ -2074,11 +2089,11 @@ const lunarBiz = {
             '<div class="text-xs text-gray-500 mt-1">' + daysLeftText + '</div>' +
             startDateHtml +
           '</div></td>' +
-          '<td data-label="金额" class="px-4 py-3"><div class="td-content-wrapper">' +
-            amountHtml +
+          '<td data-label="注册商" class="px-4 py-3"><div class="td-content-wrapper">' +
+            registrarHtml +
           '</div></td>' +
-          '<td data-label="提醒设置" class="px-4 py-3"><div class="td-content-wrapper">' +
-            reminderHtml +
+          '<td data-label="剩余天数" class="px-4 py-3"><div class="td-content-wrapper">' +
+            remainingHtml +
           '</div></td>' +
           '<td data-label="状态" class="px-4 py-3"><div class="td-content-wrapper">' + statusHtml + '</div></td>' +
           '<td data-label="操作" class="px-4 py-3">' +
@@ -3409,7 +3424,8 @@ const lunarBiz = {
         customType: document.getElementById('customType').value.trim(),
         category: document.getElementById('category').value.trim(),
         notes: document.getElementById('notes').value.trim() || '',
-        amount: document.getElementById('amount').value ? parseFloat(document.getElementById('amount').value) : null,
+        registrarName: document.getElementById('registrarName').value.trim(),
+        registrarUrl: document.getElementById('registrarUrl').value.trim(),
         isActive: document.getElementById('isActive').checked,
         autoRenew: document.getElementById('autoRenew').checked,
         startDate: document.getElementById('startDate').value,
@@ -3471,7 +3487,8 @@ const lunarBiz = {
           document.getElementById('customType').value = subscription.customType || '';
           document.getElementById('category').value = subscription.category || '';
           document.getElementById('notes').value = subscription.notes || '';
-          document.getElementById('amount').value = subscription.amount || '';
+          document.getElementById('registrarName').value = subscription.registrarName || '';
+          document.getElementById('registrarUrl').value = subscription.registrarUrl || '';
           document.getElementById('isActive').checked = subscription.isActive !== false;
           document.getElementById('autoRenew').checked = subscription.autoRenew !== false;
           document.getElementById('startDate').value = subscription.startDate ? subscription.startDate.split('T')[0] : '';
@@ -5511,6 +5528,8 @@ async function createSubscription(subscription, env) {
       reminderDays: reminderSetting.unit === 'day' ? reminderSetting.value : undefined,
       reminderHours: reminderSetting.unit === 'hour' ? reminderSetting.value : undefined,
       notes: subscription.notes || '',
+      registrarName: subscription.registrarName ? subscription.registrarName.trim() : '',
+      registrarUrl: subscription.registrarUrl ? subscription.registrarUrl.trim() : '',
       amount: subscription.amount || null,
       currency: 'CNY',
       lastPaymentDate: initialPaymentDate,
@@ -5615,6 +5634,8 @@ if (useLunar) {
       reminderDays: reminderSetting.unit === 'day' ? reminderSetting.value : undefined,
       reminderHours: reminderSetting.unit === 'hour' ? reminderSetting.value : undefined,
       notes: subscription.notes || '',
+      registrarName: subscription.registrarName !== undefined ? subscription.registrarName.trim() : (subscriptions[index].registrarName || ''),
+      registrarUrl: subscription.registrarUrl !== undefined ? subscription.registrarUrl.trim() : (subscriptions[index].registrarUrl || ''),
       amount: subscription.amount !== undefined ? subscription.amount : subscriptions[index].amount,
       currency: subscriptions[index].currency || 'CNY',
       lastPaymentDate: subscriptions[index].lastPaymentDate || subscriptions[index].startDate || subscriptions[index].createdAt || currentTime.toISOString(),
@@ -6165,13 +6186,11 @@ function shouldTriggerReminder(reminder, daysDiff, hoursDiff) {
 function formatNotificationContent(subscriptions, config) {
   const showLunar = config.SHOW_LUNAR === true;
   const timezone = config?.TIMEZONE || 'UTC';
+  const panelUrl = config?.RENEWAL_PANEL_URL || 'https://due.085580.xyz/';
   let content = '';
 
   for (const sub of subscriptions) {
     const typeText = sub.customType || '其他';
-    const periodText = (sub.periodValue && sub.periodUnit) ? `(周期: ${sub.periodValue} ${ { day: '天', month: '月', year: '年' }[sub.periodUnit] || sub.periodUnit})` : '';
-    const categoryText = sub.category ? sub.category : '未分类';
-    const reminderSetting = resolveReminderSetting(sub);
 
     // 格式化到期日期（使用所选时区）
     const expiryDateObj = new Date(sub.expiryDate);
@@ -6185,53 +6204,37 @@ function formatNotificationContent(subscriptions, config) {
 农历日期: ${lunarExpiry.fullStr}` : '';
     }
 
-    // 状态和到期时间
-    let statusText = '';
-    let statusEmoji = '';
-    if (sub.daysRemaining === 0) {
-      statusEmoji = '⚠️';
-      statusText = '今天到期！';
-    } else if (sub.daysRemaining < 0) {
-      statusEmoji = '🚨';
-      statusText = `已过期 ${Math.abs(sub.daysRemaining)} 天`;
+    // 状态和剩余时间
+    let statusEmoji = '⚠️';
+    let remainingText = '';
+    if (sub.daysRemaining < 0) {
+      const absDays = Math.abs(sub.daysRemaining);
+      remainingText = absDays >= 1
+        ? `已过期 ${absDays} 天`
+        : `已过期 ${Math.max(1, Math.abs(sub.hoursRemaining || 0))} 小时`;
+    } else if (sub.daysRemaining === 0) {
+      const hoursLeft = Math.max(0, Math.ceil(sub.hoursRemaining || 0));
+      remainingText = hoursLeft > 0 ? `${hoursLeft} 小时` : '今天';
     } else {
-      statusEmoji = '📅';
-      statusText = `将在 ${sub.daysRemaining} 天后到期`;
+      remainingText = `${sub.daysRemaining} 天`;
     }
 
-    const reminderSuffix = reminderSetting.value === 0
-      ? '（仅到期时提醒）'
-      : (reminderSetting.unit === 'hour' ? '（小时级提醒）' : '');
-    const reminderText = reminderSetting.unit === 'hour'
-      ? `提醒策略: 提前 ${reminderSetting.value} 小时${reminderSuffix}`
-      : `提醒策略: 提前 ${reminderSetting.value} 天${reminderSuffix}`;
-
-    // 获取日历类型和自动续期状态
-    const calendarType = sub.useLunar ? '农历' : '公历';
-    const autoRenewText = sub.autoRenew ? '是' : '否';
-    const amountText = sub.amount ? `\n金额: ¥${sub.amount.toFixed(2)}/周期` : '';
+    const registrarName = sub.registrarName || '未设置';
+    const registrarUrl = sub.registrarUrl || '未设置';
 
     // 构建格式化的通知内容
-    const subscriptionContent = `${statusEmoji} **${sub.name}**
-类型: ${typeText} ${periodText}
-分类: ${categoryText}${amountText}
-日历类型: ${calendarType}
-到期日期: ${formattedExpiryDate}${lunarExpiryText}
-自动续期: ${autoRenewText}
-${reminderText}
-到期状态: ${statusText}`;
+    content += `【服务到期提醒】
+${statusEmoji} 名称: ${typeText}-${sub.name}
+⏰ 剩余时间: ${remainingText}（到期时间：${formattedExpiryDate}）${lunarExpiryText}
+🏷️ 注册服务商: ${registrarName}
+🔗 注册地址: ${registrarUrl}
 
-    // 添加备注
-    let finalContent = sub.notes ? 
-      subscriptionContent + `\n备注: ${sub.notes}` : 
-      subscriptionContent;
-
-    content += finalContent + '\n\n';
+` + '\n';
   }
 
   // 添加发送时间和时区信息
   const currentTime = formatTimeInTimezone(new Date(), timezone, 'datetime');
-  content += `发送时间: ${currentTime}\n当前时区: ${formatTimezoneDisplay(timezone)}`;
+  content += `发送时间: ${currentTime}\n当前时区: ${formatTimezoneDisplay(timezone)}\n☑ 续期面板：${panelUrl}`;
 
   return content;
 }
